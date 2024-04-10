@@ -13,7 +13,7 @@ foreach ($i in $connections) {
     }
 }
 
-$choise = (Read-Host "selezionare il numero scelto") - 1
+$choise = [Math]::Floor(((Read-Host "selezionare il numero scelto") - 1))
 Write-Host $choise
 try {
     if ( ($choise -ge 0) -and ($choise -lt ($connections.Length)) ){
