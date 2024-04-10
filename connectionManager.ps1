@@ -16,8 +16,7 @@ foreach ($i in $connections) {
 $choise = (Read-Host "selezionare il numero scelto") - 1
 Write-Host $choise
 try {
-    if ( ($choice -ge 0) -and ($choice -lt ($connections.Length)) ){
-        Write-Host "test"
+    if ( ($choise -ge 0) -and ($choise -lt ($connections.Length)) ){
         connect -JSON $connections.GetValue($choise)
     }else{
         Write-Host "Si e' verificato un errore durante l'accesso all'elemento, l'elemento $choise non esiste"
