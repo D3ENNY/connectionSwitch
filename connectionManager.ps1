@@ -14,9 +14,9 @@ foreach ($i in $connections) {
 }
 
 $choise = (Read-Host "selezionare il numero scelto") - 1
-
+Write-Host $choise
 try {
-    if ( ($choice -ge 0) -and ($choice -lt $connections.Length) ){
+    if ( ($choice -ge 0) -and ($choice -lt ($connections.Length)) ){
         Write-Host "test"
         connect -JSON $connections.GetValue($choise)
     }else{
