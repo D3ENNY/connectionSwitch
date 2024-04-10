@@ -1,0 +1,19 @@
+{
+    "connections": [
+        {
+            "DHCP": {
+                "test": "test"
+            }
+        },
+        {
+            "SENAGO": {
+                "IPType": "IPv4",
+                "IP": "154.0.0.103",
+                "SubnetMask": "255.255.0.0",
+                "DefaultGateway": "145.0.200",
+                "PrimaryDNS": "145.0.3.1",
+                "SecondaryDNS": "145.0.3.2"
+            }
+        }
+    ]
+}
