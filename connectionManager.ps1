@@ -1,28 +1,72 @@
-function connect() { param([Parameter(Mandatory=$true)] [Object]$Json)
-    Write-Host $Json
-}
+function Configure-StaticSettings { param ([PSCustomObject]$config)
+    $IPType = "IPv4"
+    $adapter = Get-NetAdapter | ? { $_.Status -eq "up" }
 
-$connections = (Get-Content .\assets\config.json -Raw | ConvertFrom-Json).connections
-
-Write-Output "A che rete LAN vuoi connetterti?"
-
-foreach ($i in $connections) {
-    foreach ($key in $i.PSObject.Properties.Name) {
-        $cnt = $connections.IndexOf($i) + 1
-        Write-Output "$cnt : $key"
+    # Remove any existing IP and gateway from the IPv4 adapter
+    if (($adapter | Get-NetIPConfiguration).IPv4Address.IPAddress) {
+        $adapter | Remove-NetIPAddress -AddressFamily $IPType -Confirm:$false
     }
+    if (($adapter | Get-NetIPConfiguration).Ipv4DefaultGateway) {
+        $adapter | Remove-NetRoute -AddressFamily $IPType -Confirm:$false
+    }
+
+    # Configure the IP address and default gateway
+    $adapter | New-NetIPAddress `
+        -AddressFamily $IPType `
+        -IPAddress $config.IP `
+        -PrefixLength $config.MaskBits `
+        -DefaultGateway $config.Gateway
+
+    # Configure the DNS client server IP addresses
+    $adapter | Set-DnsClientServerAddress -ServerAddresses $config.Dns
 }
 
-$choise = [Math]::Floor(((Read-Host "selezionare il numero scelto") - 1))
-Write-Host $choise
-try {
-    if ( ($choise -ge 0) -and ($choise -lt ($connections.Length)) ){
-        connect -JSON $connections.GetValue($choise)
-    }else{
-        Write-Host "Si e' verificato un errore durante l'accesso all'elemento, l'elemento $choise non esiste"
+function Configure-DHCPSettings {
+    $IPType = "IPv4"
+    $adapter = Get-NetAdapter | ? { $_.Status -eq "up" }
+    $interface = $adapter | Get-NetIPInterface -AddressFamily $IPType
+
+    # Remove existing gateway
+    if (($interface | Get-NetIPConfiguration).Ipv4DefaultGateway) {
+        $interface | Remove-NetRoute -Confirm:$false
     }
+
+    # Enable DHCP
+    $interface | Set-NetIPInterface -DHCP Enabled
+
+    # Configure the DNS Servers automatically
+    $interface | Set-DnsClientServerAddress -ResetServerAddresses
 }
-catch {
-    Write-Host "Si e' verificato un errore durante l'elaborazione dell'oggetto JSON: " 
-    Write-Error $_
+
+Clear-Host
+# Read static JSON file
+$config = Get-Content .\assets\static_config.json -Raw | ConvertFrom-Json
+$staticSettings = $config.static_settings
+
+$choice = Read-Host "Select network configuration:`n1. DHCP`n2. Static`nEnter your choice:"
+Clear-Host
+
+switch ($choice) {
+    1 {
+        Configure-DHCPSettings
+        Write-Host "DHCP settings applied successfully."
+    }
+    2 {
+        Write-Output "Select static configuration:"
+        $staticSettings | ForEach-Object {
+            Write-Output "$($staticSettings.IndexOf($_)+1). $($_.name)"
+        }
+        $staticChoice = Read-Host "Enter the number of the static configuration you want to apply:"
+        Clear-Host
+
+        if ($staticChoice -ge 1 -and $staticChoice -le $staticSettings.Count) {
+                        Configure-StaticSettings -config $staticSettings[$staticChoice - 1]
+            Write-Host "Static configuration '$($selectedStaticConfig.name)' applied successfully."
+        } else {
+            Write-Host "Invalid choice. Please enter a number corresponding to the static configuration you want to apply."
+        }
+    }
+    default {
+        Write-Host "Invalid choice. Please select either 1 or 2."
+    }
 }
