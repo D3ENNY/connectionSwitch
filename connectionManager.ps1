@@ -18,7 +18,7 @@ function Configure-StaticSettings { param ([PSCustomObject]$config)
         -DefaultGateway $config.Gateway
 
     # Configure the DNS client server IP addresses
-    $adapter | Set-DnsClientServerAddress -ServerAddresses $config.Dns
+    $adapter | Set-DnsClientServerAddress -ServerAddresses ($config.PrimaryDns, $config.SecondaryDns)
 }
 
 function Configure-DHCPSettings {
@@ -40,7 +40,7 @@ function Configure-DHCPSettings {
 
 Clear-Host
 # Read static JSON file
-$config = Get-Content .\assets\static_config.json -Raw | ConvertFrom-Json
+$config = Get-Content .\assets\config.json -Raw | ConvertFrom-Json
 $staticSettings = $config.static_settings
 
 $choice = Read-Host "Select network configuration:`n1. DHCP`n2. Static`nEnter your choice:"
