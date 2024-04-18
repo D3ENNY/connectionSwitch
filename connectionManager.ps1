@@ -10,14 +10,25 @@ function Configure-StaticSettings { param ([PSCustomObject]$config)
         $adapter | Remove-NetRoute -AddressFamily $IPType -Confirm:$false
     }
 
+    # Check if IP is already used
+    $existingIP = Get-NetIPAddress -IPAddress $config.IP -ErrorAction SilentlyContinue
+    if ($existingIP) {
+        Write-Host "IP $($config.IP) is already used"
+        exit
+    }
     # Configure the IP address and default gateway
-    $adapter | New-NetIPAddress `
+    try {
+        $adapter | New-NetIPAddress `
         -AddressFamily $IPType `
         -IPAddress $config.IP `
         -PrefixLength $config.MaskBits `
         -DefaultGateway $config.Gateway
+    }
+    catch {
+        Write-Host "Error while appling IP, exit the program"
+    }
 
-    # Configure the DNS client server IP addresses
+    # Configure the DNS clie\nt server IP addresses
     $adapter | Set-DnsClientServerAddress -ServerAddresses ($config.PrimaryDns, $config.SecondaryDns)
 }
 
@@ -27,8 +38,13 @@ function Configure-DHCPSettings {
     $interface = $adapter | Get-NetIPInterface -AddressFamily $IPType
 
     # Remove existing gateway
-    if (($interface | Get-NetIPConfiguration).Ipv4DefaultGateway) {
-        $interface | Remove-NetRoute -Confirm:$false
+    try {
+        if (($interface | Get-NetIPConfiguration).Ipv4DefaultGateway) {
+            $interface | Remove-NetRoute -Confirm:$false
+        }
+    }
+    catch {
+        Write-Output "no gateway find to remove"
     }
 
     # Enable DHCP
