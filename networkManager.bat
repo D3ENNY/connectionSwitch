@@ -1,4 +1,5 @@
 @echo off
+rem this script execute connectionManager.ps1 script
 setlocal EnableDelayedExpansion
 
 rem Ask for admin privileges
