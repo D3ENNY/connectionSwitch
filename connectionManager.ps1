@@ -1,6 +1,6 @@
-function Configure-StaticSettings { param ([PSCustomObject]$config)
+function Set-StaticSettings { param ([PSCustomObject]$config)
     $IPType = "IPv4"
-    $adapter = Get-NetAdapter | ? { $_.Status -eq "up" }
+    $adapter = Get-NetAdapter | Where-Object { $_.Status -eq "up" }
 
     # Remove any existing IP and gateway from the IPv4 adapter
     if (($adapter | Get-NetIPConfiguration).IPv4Address.IPAddress) {
@@ -32,9 +32,9 @@ function Configure-StaticSettings { param ([PSCustomObject]$config)
     $adapter | Set-DnsClientServerAddress -ServerAddresses ($config.PrimaryDns, $config.SecondaryDns)
 }
 
-function Configure-DHCPSettings {
+function Set-DHCPSettings {
     $IPType = "IPv4"
-    $adapter = Get-NetAdapter | ? { $_.Status -eq "up" }
+    $adapter = Get-NetAdapter | Where-Object { $_.Status -eq "up" }
     $interface = $adapter | Get-NetIPInterface -AddressFamily $IPType
 
     # Remove existing gateway
