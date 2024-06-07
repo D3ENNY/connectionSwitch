@@ -70,7 +70,7 @@ Clear-Host
 
 switch ($choice) {
     1 {
-        Configure-DHCPSettings
+        Set-DHCPSettings
         Write-Host "DHCP settings applied successfully."
     }
     2 {
@@ -82,7 +82,7 @@ switch ($choice) {
         Clear-Host
 
         if ($staticChoice -ge 1 -and $staticChoice -le $staticSettings.Count) {
-                        Configure-StaticSettings -config $staticSettings[$staticChoice - 1]
+            Set-StaticSettings -config $staticSettings[$staticChoice - 1]
             Write-Host "Static configuration '$($selectedStaticConfig.name)' applied successfully."
         } else {
             Write-Host "Invalid choice. Please enter a number corresponding to the static configuration you want to apply."
